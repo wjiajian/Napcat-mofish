@@ -64,3 +64,25 @@ async def get_group_member_list(group_id: int) -> list[dict[str, Any]]:
     if result.get("status") == "ok":
         return result.get("data", [])
     return []
+
+
+async def get_group_msg_history(group_id: int) -> list[dict[str, Any]]:
+    """Get group message history (latest 20)."""
+    result = await client.call_api(
+        "get_group_msg_history",
+        {"group_id": group_id, "count": 20},
+    )
+    if result.get("status") == "ok":
+        return result.get("data", {}).get("messages", [])
+    return []
+
+
+async def get_friend_msg_history(user_id: int) -> list[dict[str, Any]]:
+    """Get friend message history (latest 20)."""
+    result = await client.call_api(
+        "get_friend_msg_history",
+        {"user_id": user_id, "count": 20},
+    )
+    if result.get("status") == "ok":
+        return result.get("data", {}).get("messages", [])
+    return []

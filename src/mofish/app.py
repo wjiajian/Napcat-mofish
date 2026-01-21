@@ -113,7 +113,7 @@ class MofishApp(App):
         """Handle incoming events from NapCat."""
         self.event_handler.handle_event(data, self)
 
-    def on_session_item_selected(self, message: SessionItem.Selected) -> None:
+    async def on_session_item_selected(self, message: SessionItem.Selected) -> None:
         """Handle session selection."""
         session_id = message.session_id
 
@@ -131,6 +131,32 @@ class MofishApp(App):
         # Focus input
         message_input = self.query_one("#message-input", MessageInput)
         message_input.focus_input()
+
+        # Load history
+        try:
+            is_group = session_id.startswith("group_")
+            target_id = int(session_id.split("_")[1])
+            
+            history = []
+            if is_group:
+                history = await actions.get_group_msg_history(target_id)
+            else:
+                history = await actions.get_friend_msg_history(target_id)
+            
+            # Parse and add messages
+            from mofish.api.events import parse_message_event
+            
+            for msg_data in history:
+                # Inject post_type if missing (common in history API)
+                if "post_type" not in msg_data:
+                    msg_data["post_type"] = "message"
+                
+                event = parse_message_event(msg_data)
+                if event:
+                    chat_log.add_message(event)
+
+        except Exception:
+            pass
 
     async def on_message_input_submit(self, message: MessageInput.Submit) -> None:
         """Handle message submission."""
