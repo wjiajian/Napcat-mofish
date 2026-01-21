@@ -36,6 +36,15 @@ class MofishApp(App):
         super().__init__()
         self._boss_mode_active = False
         self._connected = False
+        
+        # Initialize handlers
+        from mofish.handlers.event_handler import EventHandler
+        from mofish.handlers.input_handler import InputHandler
+        from mofish.handlers.mention_handler import MentionHandler
+        
+        self.input_handler = InputHandler()
+        self.mention_handler = MentionHandler()
+        self.event_handler = EventHandler()
 
     def compose(self) -> ComposeResult:
         # Main layout
@@ -102,26 +111,7 @@ class MofishApp(App):
 
     def _on_event(self, data: dict[str, Any]) -> None:
         """Handle incoming events from NapCat."""
-        event = parse_message_event(data)
-        if not event:
-            return
-
-        # Add message to chat log
-        chat_log = self.query_one("#chat-log", ChatLog)
-        chat_log.add_message(event)
-
-        # Update sidebar preview
-        sidebar = self.query_one("#sidebar", Sidebar)
-        preview = event.plain_text[:20] or "[媒体消息]"
-        sidebar.update_preview(event.session_id, preview)
-
-        # Update session state
-        session_state.update_last_message(event.session_id, preview)
-
-        # Increment unread if not active session
-        if event.session_id != session_state.active_session_id:
-            session_state.increment_unread(event.session_id)
-            sidebar.increment_unread(event.session_id)
+        self.event_handler.handle_event(data, self)
 
     def on_session_item_selected(self, message: SessionItem.Selected) -> None:
         """Handle session selection."""
@@ -144,28 +134,7 @@ class MofishApp(App):
 
     async def on_message_input_submit(self, message: MessageInput.Submit) -> None:
         """Handle message submission."""
-        session = session_state.get_active_session()
-        if not session:
-            return
-
-        text = message.text
-
-        # Send message
-        try:
-            if session.is_group:
-                await actions.send_group_msg(session.target_id, text)
-            else:
-                await actions.send_private_msg(session.target_id, text)
-
-            # Add local echo (show our own message)
-            from mofish.api.events import create_self_message
-            self_msg = create_self_message(text, session.session_id, "我")
-            chat_log = self.query_one("#chat-log", ChatLog)
-            chat_log.add_message(self_msg)
-
-        except Exception as e:
-            status = self.query_one("#status-bar", Static)
-            status.update(f"[#ff4444]Send failed: {e}[/]")
+        await self.input_handler.handle_submit(message.text, self)
 
     def action_toggle_boss_mode(self) -> None:
         """Toggle boss mode (panic button)."""
@@ -189,3 +158,17 @@ class MofishApp(App):
         """Exit boss mode if active."""
         if self._boss_mode_active:
             self.action_toggle_boss_mode()
+
+    async def on_message_input_request_mentions(
+        self, message: MessageInput.RequestMentions
+    ) -> None:
+        """Handle @ mention search request."""
+        await self.mention_handler.handle_request(message.query, self)
+
+    def on_message_row_clicked(self, message) -> None:
+        """Handle message click for reply."""
+        from mofish.ui.chatlog import MessageRow
+
+        if hasattr(message, "message_id"):
+            message_input = self.query_one("#message-input", MessageInput)
+            message_input.set_reply(message.message_id)

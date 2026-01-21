@@ -4,6 +4,7 @@ from datetime import datetime
 
 from textual.app import ComposeResult
 from textual.containers import VerticalScroll
+from textual.message import Message
 from textual.widget import Widget
 from textual.widgets import Static
 
@@ -19,9 +20,21 @@ class MessageRow(Static):
         height: auto;
         margin: 0;
     }
+    MessageRow:hover {
+        background: #1a1a1a;
+    }
     """
 
+    class Clicked(Message):
+        """Sent when message is clicked for reply."""
+
+        def __init__(self, message_id: int) -> None:
+            super().__init__()
+            self.message_id = message_id
+
     def __init__(self, event: MessageEvent, is_highlight: bool = False) -> None:
+        self._message_id = event.message_id
+
         # Format time
         time_str = datetime.fromtimestamp(event.time).strftime("%H:%M:%S")
 
@@ -61,6 +74,11 @@ class MessageRow(Static):
             else:
                 parts.append(f"[{seg.type}]")
         return "".join(parts) or "[空消息]"
+
+    def on_click(self) -> None:
+        """Handle click to reply."""
+        if self._message_id:
+            self.post_message(self.Clicked(self._message_id))
 
 
 class ChatLog(Widget):

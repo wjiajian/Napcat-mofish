@@ -27,16 +27,20 @@ async def get_group_list() -> list[GroupInfo]:
     return []
 
 
-async def send_private_msg(user_id: int, message: str) -> dict[str, Any]:
-    """Send private message."""
+async def send_private_msg(
+    user_id: int, message: str | list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Send private message. Message can be string or array format."""
     return await client.call_api(
         "send_private_msg",
         {"user_id": user_id, "message": message},
     )
 
 
-async def send_group_msg(group_id: int, message: str) -> dict[str, Any]:
-    """Send group message."""
+async def send_group_msg(
+    group_id: int, message: str | list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Send group message. Message can be string or array format."""
     return await client.call_api(
         "send_group_msg",
         {"group_id": group_id, "message": message},
@@ -49,3 +53,14 @@ async def get_login_info() -> dict[str, Any]:
     if result.get("status") == "ok":
         return result.get("data", {})
     return {}
+
+
+async def get_group_member_list(group_id: int) -> list[dict[str, Any]]:
+    """Get group member list."""
+    result = await client.call_api(
+        "get_group_member_list",
+        {"group_id": group_id},
+    )
+    if result.get("status") == "ok":
+        return result.get("data", [])
+    return []
