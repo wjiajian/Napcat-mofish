@@ -1,0 +1,154 @@
+/* Mofish TUI Styles - Hacker Theme */
+
+/* ====== Global ====== */
+Screen {
+    background: #0a0a0a;
+}
+
+/* ====== Sidebar (Session List) ====== */
+#sidebar {
+    width: 10;
+    background: #0a0a0a;
+    border-right: none;
+}
+
+.session-name {
+    color: #00aa00;
+    height: 1;
+}
+
+/* ====== Chat Area ====== */
+#chat-container {
+    background: #0a0a0a;
+    width: 1fr;
+    height: 100%;
+}
+
+#chat-header {
+    height: 3;
+    background: #0d0d0d;
+    border-bottom: solid #1a1a1a;
+    padding: 0 2;
+    content-align: center middle;
+}
+
+#chat-header-title {
+    color: #00cc00;
+    text-style: bold;
+}
+
+#chat-log {
+    background: #0a0a0a;
+    height: 1fr;
+    padding: 0 1;
+    scrollbar-color: #333333;
+    scrollbar-color-hover: #00ff00;
+    scrollbar-color-active: #00ff00;
+}
+
+.message-row {
+    margin: 0 0 1 0;
+}
+
+.message-sender {
+    color: #00aa00;
+    text-style: bold;
+}
+
+.message-time {
+    color: #444444;
+}
+
+.message-content {
+    color: #888888;
+}
+
+.message-content.--highlight {
+    color: #ffff00;
+    text-style: bold;
+}
+
+.message-content.--image {
+    color: #666666;
+    text-style: italic;
+}
+
+/* ====== Input Area ====== */
+#input-container {
+    height: 3;
+    background: #0d0d0d;
+    border-top: solid #1a1a1a;
+    padding: 0 1;
+}
+
+#prompt-label {
+    color: #00ff00;
+    width: auto;
+    padding-right: 1;
+}
+
+#message-input {
+    background: #0a0a0a;
+    color: #00cc00;
+    border: none;
+}
+
+#message-input:focus {
+    border: none;
+}
+
+/* ====== Boss Mode (Fake Screen) ====== */
+#boss-mode {
+    background: #0a0a0a;
+    padding: 1 2;
+}
+
+#boss-mode-log {
+    color: #888888;
+    background: #0a0a0a;
+}
+
+.fake-error {
+    color: #ff4444;
+}
+
+.fake-warning {
+    color: #ffaa00;
+}
+
+.fake-success {
+    color: #00ff00;
+}
+
+.fake-info {
+    color: #888888;
+}
+
+/* ====== Status Bar ====== */
+#status-bar {
+    height: 1;
+    background: #0d0d0d;
+    color: #555555;
+    padding: 0 1;
+}
+
+#status-connection {
+    color: #00ff00;
+}
+
+#status-connection.--disconnected {
+    color: #ff4444;
+}
+
+/* ====== Scrollbar ====== */
+Scrollbar {
+    background: #1a1a1a;
+}
+
+ScrollBar > .scrollbar--bar {
+    background: #333333;
+}
+
+ScrollBar > .scrollbar--bar:hover {
+    background: #00aa00;
+}
