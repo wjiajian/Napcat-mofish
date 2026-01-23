@@ -10,6 +10,7 @@ from textual.widgets import Static
 
 from mofish.api.events import MessageEvent
 from mofish.config import config
+from mofish.state.member_cache import member_cache
 
 
 class MessageRow(Static):
@@ -38,8 +39,8 @@ class MessageRow(Static):
         # Format time
         time_str = datetime.fromtimestamp(event.time).strftime("%H:%M:%S")
 
-        # Format content
-        content = self._format_content(event)
+        # Format content (pass group_id for @ display)
+        content = self._format_content(event, event.group_id)
 
         # Build display
         sender_style = "[#00aa00 bold]"
@@ -58,7 +59,7 @@ class MessageRow(Static):
 
         super().__init__(text, markup=True)
 
-    def _format_content(self, event: MessageEvent) -> str:
+    def _format_content(self, event: MessageEvent, group_id: int | None) -> str:
         """Format message content, replacing images with placeholders."""
         parts: list[str] = []
         for seg in event.segments:
@@ -70,7 +71,14 @@ class MessageRow(Static):
                 parts.append("[表情]")
             elif seg.type == "at":
                 qq = seg.at_qq
-                parts.append(f"@{qq}")
+                # 优先显示群昵称喵～
+                if qq == "all":
+                    parts.append("@全体成员")
+                elif group_id:
+                    display = member_cache.get_display_name(group_id, qq)
+                    parts.append(f"@{display}" if display else f"@{qq}")
+                else:
+                    parts.append(f"@{qq}")
             else:
                 parts.append(f"[{seg.type}]")
         return "".join(parts) or "[空消息]"

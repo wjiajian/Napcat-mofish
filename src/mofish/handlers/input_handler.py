@@ -1,5 +1,6 @@
 """Handler for message input submission."""
 
+import re
 from typing import TYPE_CHECKING, Any
 
 from textual.app import App
@@ -7,6 +8,7 @@ from textual.widgets import Static
 
 from mofish.api import actions
 from mofish.api.events import create_self_message
+from mofish.state.member_cache import member_cache
 from mofish.state.session import session_state
 from mofish.ui.chatlog import ChatLog
 from mofish.utils.commands import build_message_array, parse_input
@@ -38,6 +40,9 @@ class InputHandler:
         has_image = any(cmd.command_type == "image" for cmd in commands)
         if has_image:
             display_text = "[发送图片]"
+        elif session.is_group:
+            # 将 @QQ号 替换为 @群昵称 喵～
+            display_text = self._replace_at_with_nickname(text, session.target_id)
 
         # Send message
         try:
@@ -60,3 +65,15 @@ class InputHandler:
                 status.update(f"[#ff4444]Send failed: {e}[/]")
             except Exception:
                 pass
+
+    def _replace_at_with_nickname(self, text: str, group_id: int) -> str:
+        """将文本中的 @QQ号 替换为 @群昵称."""
+        def replace_at(match: re.Match) -> str:
+            qq = match.group(1)
+            if qq == "all":
+                return "@全体成员"
+            display = member_cache.get_display_name(group_id, qq)
+            return f"@{display}" if display else f"@{qq}"
+
+        return re.sub(r"@(\d+|all)", replace_at, text)
+

@@ -12,6 +12,7 @@ from mofish.api import actions
 from mofish.api.client import client
 from mofish.api.events import parse_message_event
 from mofish.config import config
+from mofish.state.member_cache import member_cache
 from mofish.state.session import session_state
 from mofish.ui.boss_mode import BossMode
 from mofish.ui.chatlog import ChatLog
@@ -139,6 +140,8 @@ class MofishApp(App):
             
             history = []
             if is_group:
+                # 预加载群成员缓存，以便@显示群昵称喵～
+                await member_cache.ensure_cache(target_id)
                 history = await actions.get_group_msg_history(target_id)
             else:
                 history = await actions.get_friend_msg_history(target_id)
