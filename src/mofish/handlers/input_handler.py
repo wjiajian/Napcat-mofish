@@ -41,8 +41,8 @@ class InputHandler:
         if has_image:
             display_text = "[发送图片]"
         elif session.is_group:
-            # 将 @QQ号 和 /reply QQ号 替换为群昵称喵～
-            display_text = self._replace_qq_with_nickname(text, session.target_id)
+            # 将 @QQ号 替换为群昵称，/reply 消息ID 替换为发送者昵称喵～
+            display_text = self._replace_qq_with_nickname(text, session.target_id, app)
 
         # Send message
         try:
@@ -66,17 +66,31 @@ class InputHandler:
             except Exception:
                 pass
 
-    def _replace_qq_with_nickname(self, text: str, group_id: int) -> str:
-        """将文本中的 @QQ号 和 /reply QQ号 替换为群昵称."""
-        def replace_qq(match: re.Match) -> str:
-            prefix = match.group(1)  # "@" 或 "/reply "
-            qq = match.group(2)
-            if qq == "all":
-                return "@全体成员"
-            display = member_cache.get_display_name(group_id, qq)
-            if display:
-                return f"{prefix}{display}"
+    def _replace_qq_with_nickname(self, text: str, group_id: int, app: App) -> str:
+        """将文本中的 @QQ号 替换为群昵称，/reply 消息ID 替换为发送者昵称."""
+        from mofish.ui.chatlog import ChatLog
+        
+        def replace_at(match: re.Match) -> str:
+            """替换 @QQ号 为群昵称."""
+            return member_cache.format_at_display(group_id, match.group(1))
+        
+        def replace_reply(match: re.Match) -> str:
+            """替换 /reply 消息ID 为发送者昵称."""
+            msg_id_str = match.group(1)
+            rest = match.group(2)
+            try:
+                msg_id = int(msg_id_str)
+                chat_log = app.query_one("#chat-log", ChatLog)
+                msg_event = chat_log.get_message_by_id(msg_id)
+                if msg_event:
+                    # 用发送者昵称替换消息 ID
+                    return f"/reply @{msg_event.display_name}{rest}"
+            except Exception:
+                pass
             return match.group(0)  # 未找到则保持原样
-
-        # 同时匹配 @QQ号 和 /reply QQ号
-        return re.sub(r"(@|/reply )(\d+|all)", replace_qq, text)
+        
+        # 先处理 /reply 消息ID
+        result = re.sub(r"/reply (\d+)(\s*)", replace_reply, text)
+        # 再处理 @QQ号
+        result = re.sub(r"@(\d+|all)", replace_at, result)
+        return result

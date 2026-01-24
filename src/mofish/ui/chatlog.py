@@ -70,15 +70,8 @@ class MessageRow(Static):
             elif seg.type == "face":
                 parts.append("[表情]")
             elif seg.type == "at":
-                qq = seg.at_qq
-                # 优先显示群昵称喵～
-                if qq == "all":
-                    parts.append("@全体成员")
-                elif group_id:
-                    display = member_cache.get_display_name(group_id, qq)
-                    parts.append(f"@{display}" if display else f"@{qq}")
-                else:
-                    parts.append(f"@{qq}")
+                # 使用统一的 @ 显示格式化喵～
+                parts.append(member_cache.format_at_display(group_id, seg.at_qq))
             else:
                 parts.append(f"[{seg.type}]")
         return "".join(parts) or "[空消息]"
@@ -183,3 +176,11 @@ class ChatLog(Widget):
             scroll.remove_children()
         except Exception:
             pass
+
+    def get_message_by_id(self, message_id: int) -> MessageEvent | None:
+        """Get message event by message ID from current session."""
+        messages = self._messages.get(self._session_id, [])
+        for event in messages:
+            if event.message_id == message_id:
+                return event
+        return None

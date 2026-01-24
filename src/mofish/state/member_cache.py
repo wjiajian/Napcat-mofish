@@ -40,6 +40,16 @@ class MemberCacheService:
         nickname = member.get("nickname", "")
         return card or nickname or None
 
+    def format_at_display(self, group_id: int | None, qq: int | str) -> str:
+        """格式化 @ 显示文本，统一处理 @全体成员 和 @群昵称 逻辑."""
+        qq_str = str(qq)
+        if qq_str == "all":
+            return "@全体成员"
+        if group_id:
+            display = self.get_display_name(group_id, qq_str)
+            return f"@{display}" if display else f"@{qq_str}"
+        return f"@{qq_str}"
+
     def get_members_list(self, group_id: int) -> list[dict[str, Any]]:
         """获取群成员列表（用于 mention_handler）."""
         if group_id not in self._cache:

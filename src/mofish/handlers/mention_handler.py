@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from textual.app import App
 
+from mofish.config import config
 from mofish.state.member_cache import member_cache
 from mofish.state.session import session_state
 from mofish.ui.input import MessageInput
@@ -29,13 +30,13 @@ class MentionHandler:
         if session.is_group:
             group_id = session.target_id
             await self._search_group_members(group_id, query, results)
-            # Limit results after search
-            results = results[:8]
-
-        # Also add @all option for groups
-        if session and session.is_group:
+            
+            # 先插入 @all，再进行最终裁剪，确保 @all 常驻喵～
             if "all" in query or not query:
                 results.insert(0, ("all", "@全体成员"))
+            
+            # Limit results after inserting @all
+            results = results[:config.mention_limit]
 
         # Show results
         try:

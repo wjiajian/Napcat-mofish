@@ -11,20 +11,26 @@ from mofish.api.events import (
 )
 
 
+async def _call_api_data(
+    action: str, params: dict | None = None, default: Any = None
+) -> Any:
+    """Call API and return data if successful, else default."""
+    result = await client.call_api(action, params or {})
+    if result.get("status") == "ok":
+        return result.get("data", default if default is not None else {})
+    return default if default is not None else {}
+
+
 async def get_friend_list() -> list[FriendInfo]:
     """Get friend list."""
-    result = await client.call_api("get_friend_list")
-    if result.get("status") == "ok":
-        return parse_friend_list(result.get("data", []))
-    return []
+    data = await _call_api_data("get_friend_list", default=[])
+    return parse_friend_list(data)
 
 
 async def get_group_list() -> list[GroupInfo]:
     """Get group list."""
-    result = await client.call_api("get_group_list")
-    if result.get("status") == "ok":
-        return parse_group_list(result.get("data", []))
-    return []
+    data = await _call_api_data("get_group_list", default=[])
+    return parse_group_list(data)
 
 
 async def send_private_msg(
@@ -49,21 +55,12 @@ async def send_group_msg(
 
 async def get_login_info() -> dict[str, Any]:
     """Get bot login info."""
-    result = await client.call_api("get_login_info")
-    if result.get("status") == "ok":
-        return result.get("data", {})
-    return {}
+    return await _call_api_data("get_login_info", default={})
 
 
 async def get_group_member_list(group_id: int) -> list[dict[str, Any]]:
     """Get group member list."""
-    result = await client.call_api(
-        "get_group_member_list",
-        {"group_id": group_id},
-    )
-    if result.get("status") == "ok":
-        return result.get("data", [])
-    return []
+    return await _call_api_data("get_group_member_list", {"group_id": group_id}, default=[])
 
 
 async def get_group_msg_history(group_id: int) -> list[dict[str, Any]]:

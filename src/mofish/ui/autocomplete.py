@@ -85,7 +85,7 @@ class AutocompletePopup(Widget):
 
     def show(self, items: list[tuple[str, str]]) -> None:
         """Show popup with items. Each item is (value, display)."""
-        self._items = items[:8]  # Limit to 8 items
+        self._items = items  # 调用者决定是否限制数量
         self._selected_index = 0
         self.is_visible = True
         self.run_worker(self._render_items())

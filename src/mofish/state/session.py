@@ -24,27 +24,30 @@ class SessionState:
     sessions: dict[str, Session] = field(default_factory=dict)
     active_session_id: str = ""
 
-    def add_friend(self, friend: FriendInfo) -> Session:
-        """Add a friend as a session."""
+    def add_session(
+        self, session_id: str, name: str, is_group: bool, target_id: int
+    ) -> Session:
+        """Add a session (friend or group)."""
         session = Session(
-            session_id=friend.session_id,
-            name=friend.display_name,
-            is_group=False,
-            target_id=friend.user_id,
+            session_id=session_id,
+            name=name,
+            is_group=is_group,
+            target_id=target_id,
         )
         self.sessions[session.session_id] = session
         return session
 
+    def add_friend(self, friend: FriendInfo) -> Session:
+        """Add a friend as a session."""
+        return self.add_session(
+            friend.session_id, friend.display_name, False, friend.user_id
+        )
+
     def add_group(self, group: GroupInfo) -> Session:
         """Add a group as a session."""
-        session = Session(
-            session_id=group.session_id,
-            name=group.group_name,
-            is_group=True,
-            target_id=group.group_id,
+        return self.add_session(
+            group.session_id, group.group_name, True, group.group_id
         )
-        self.sessions[session.session_id] = session
-        return session
 
     def get_session(self, session_id: str) -> Session | None:
         """Get session by ID."""
@@ -70,8 +73,10 @@ class SessionState:
 
     def update_last_message(self, session_id: str, message: str) -> None:
         """Update last message preview."""
+        from mofish.config import config
+
         if session_id in self.sessions:
-            self.sessions[session_id].last_message = message[:30]
+            self.sessions[session_id].last_message = message[:config.preview_length]
 
 
 # Global state instance

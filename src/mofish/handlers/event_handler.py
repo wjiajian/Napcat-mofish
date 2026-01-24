@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from textual.app import App
 
 from mofish.api.events import parse_message_event
+from mofish.config import config
 from mofish.state.session import session_state
 from mofish.ui.chatlog import ChatLog
 from mofish.ui.sidebar import Sidebar
@@ -30,7 +31,7 @@ class EventHandler:
 
             # Update sidebar preview
             sidebar = app.query_one("#sidebar", Sidebar)
-            preview = event.plain_text[:20] or "[媒体消息]"
+            preview = event.plain_text[:config.preview_length] or "[媒体消息]"
             sidebar.update_preview(event.session_id, preview)
 
             # Update session state

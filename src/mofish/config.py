@@ -28,6 +28,10 @@ class Config:
     # Message buffer size per session
     message_buffer_size: int = 100
 
+    # UI display settings
+    preview_length: int = 20  # Preview text truncation length
+    mention_limit: int = 8    # Max @ mention suggestions
+
     @property
     def ws_url(self) -> str:
         """Get full WebSocket URL."""

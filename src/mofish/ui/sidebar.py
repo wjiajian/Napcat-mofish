@@ -82,10 +82,12 @@ class SessionItem(Widget):
 
     def update_preview(self, text: str) -> None:
         """Update the preview text."""
+        from mofish.config import config
+
         self._preview = text
         try:
             preview_label = self.query_one(".session-preview", Label)
-            preview_label.update(text[:20])
+            preview_label.update(text[:config.preview_length])
         except Exception:
             pass
 
@@ -110,31 +112,25 @@ class Sidebar(Widget):
         # No title, just the list
         yield VerticalScroll(id="session-list")
 
-    def add_friend(self, friend: FriendInfo) -> None:
-        """Add a friend to the session list."""
-        session_id = friend.session_id
+    def add_session(self, session_id: str, name: str, is_group: bool) -> None:
+        """Add a session item (friend or group)."""
         if session_id not in self._sessions:
             item = SessionItem(
                 session_id=session_id,
-                name=friend.display_name,
-                is_group=False,
+                name=name,
+                is_group=is_group,
                 id=f"session-{session_id}",
             )
             self._sessions[session_id] = item
             self.query_one("#session-list", VerticalScroll).mount(item)
 
+    def add_friend(self, friend: FriendInfo) -> None:
+        """Add a friend to the session list."""
+        self.add_session(friend.session_id, friend.display_name, False)
+
     def add_group(self, group: GroupInfo) -> None:
         """Add a group to the session list."""
-        session_id = group.session_id
-        if session_id not in self._sessions:
-            item = SessionItem(
-                session_id=session_id,
-                name=group.group_name,
-                is_group=True,
-                id=f"session-{session_id}",
-            )
-            self._sessions[session_id] = item
-            self.query_one("#session-list", VerticalScroll).mount(item)
+        self.add_session(group.session_id, group.group_name, True)
 
     def set_active(self, session_id: str) -> None:
         """Set the active session."""

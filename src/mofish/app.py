@@ -10,7 +10,6 @@ from textual.widgets import Footer, Static
 
 from mofish.api import actions
 from mofish.api.client import client
-from mofish.api.events import parse_message_event
 from mofish.config import config
 from mofish.state.member_cache import member_cache
 from mofish.state.session import session_state
