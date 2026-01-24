@@ -41,8 +41,8 @@ class InputHandler:
         if has_image:
             display_text = "[发送图片]"
         elif session.is_group:
-            # 将 @QQ号 替换为 @群昵称 喵～
-            display_text = self._replace_at_with_nickname(text, session.target_id)
+            # 将 @QQ号 和 /reply QQ号 替换为群昵称喵～
+            display_text = self._replace_qq_with_nickname(text, session.target_id)
 
         # Send message
         try:
@@ -66,14 +66,17 @@ class InputHandler:
             except Exception:
                 pass
 
-    def _replace_at_with_nickname(self, text: str, group_id: int) -> str:
-        """将文本中的 @QQ号 替换为 @群昵称."""
-        def replace_at(match: re.Match) -> str:
-            qq = match.group(1)
+    def _replace_qq_with_nickname(self, text: str, group_id: int) -> str:
+        """将文本中的 @QQ号 和 /reply QQ号 替换为群昵称."""
+        def replace_qq(match: re.Match) -> str:
+            prefix = match.group(1)  # "@" 或 "/reply "
+            qq = match.group(2)
             if qq == "all":
                 return "@全体成员"
             display = member_cache.get_display_name(group_id, qq)
-            return f"@{display}" if display else f"@{qq}"
+            if display:
+                return f"{prefix}{display}"
+            return match.group(0)  # 未找到则保持原样
 
-        return re.sub(r"@(\d+|all)", replace_at, text)
-
+        # 同时匹配 @QQ号 和 /reply QQ号
+        return re.sub(r"(@|/reply )(\d+|all)", replace_qq, text)

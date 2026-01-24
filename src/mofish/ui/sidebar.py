@@ -72,6 +72,14 @@ class SessionItem(Widget):
         """Handle click event."""
         self.post_message(self.Selected(self.session_id, self._name))
 
+    def on_key(self, event) -> None:
+        """Handle key event - Enter to select session."""
+        from textual.events import Key
+
+        if isinstance(event, Key) and event.key == "enter":
+            self.post_message(self.Selected(self.session_id, self._name))
+            event.stop()
+
     def update_preview(self, text: str) -> None:
         """Update the preview text."""
         self._preview = text
